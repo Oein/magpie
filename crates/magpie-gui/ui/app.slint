@@ -1,0 +1,218 @@
+import { Button, LineEdit, ComboBox, ScrollView } from "std-widgets.slint";
+
+export struct DownloadRow {
+    id: string,
+    filename: string,
+    state: string,
+    pct: float,            // 0..100
+    size-text: string,
+    speed-text: string,
+    priority: string,      // "Low" | "Normal" | "High"
+    error: string,
+    active: bool,          // downloading/preparing -> Pause, else Resume
+}
+
+export component MainWindow inherits Window {
+    title: "Magpie";
+    preferred-width: 780px;
+    preferred-height: 580px;
+    min-width: 520px;
+    background: #0c1115;
+
+    in property <[DownloadRow]> downloads;
+    in property <bool> connected: false;
+    in property <string> global-limit-text: "";
+
+    callback add-url(string);
+    callback pause(string);
+    callback resume(string);
+    callback cancel(string);
+    callback remove(string);
+    callback set-priority(string, string);
+    callback set-global-limit(string);
+
+    property <color> surface: #141b21;
+    property <color> line: #242f38;
+    property <color> fg: #eef3f6;
+    property <color> muted: #9aa9b3;
+    property <color> accent: #36b7c2;
+
+    VerticalLayout {
+        // ---------- header ----------
+        Rectangle {
+            height: 64px;
+            background: #0f171d;
+            HorizontalLayout {
+                padding-left: 18px;
+                padding-right: 18px;
+                spacing: 12px;
+                alignment: start;
+
+                Image {
+                    source: @image-url("magpie.svg");
+                    width: 36px;
+                    height: 36px;
+                }
+                Text {
+                    text: "Magpie";
+                    color: fg;
+                    font-size: 20px;
+                    font-weight: 700;
+                    vertical-alignment: center;
+                }
+                Rectangle {
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 5px;
+                    y: (parent.height - self.height) / 2;
+                    background: connected ? #2f9e5b : #c0505a;
+                }
+                Rectangle { horizontal-stretch: 1; }
+
+                Text {
+                    text: "Limit KB/s";
+                    color: muted;
+                    vertical-alignment: center;
+                }
+                limit-input := LineEdit {
+                    width: 88px;
+                    placeholder-text: "∞";
+                    text: global-limit-text;
+                    accepted(t) => { root.set-global-limit(t); }
+                }
+                Button {
+                    text: "Apply";
+                    clicked => { root.set-global-limit(limit-input.text); }
+                }
+            }
+        }
+        Rectangle { height: 1px; background: line; }
+
+        // ---------- add bar ----------
+        Rectangle {
+            height: 58px;
+            background: surface;
+            HorizontalLayout {
+                padding: 11px;
+                spacing: 10px;
+                url-input := LineEdit {
+                    horizontal-stretch: 1;
+                    placeholder-text: "Paste a URL to download…";
+                    accepted(t) => { root.add-url(t); url-input.text = ""; }
+                }
+                Button {
+                    text: "Add";
+                    primary: true;
+                    clicked => { root.add-url(url-input.text); url-input.text = ""; }
+                }
+            }
+        }
+        Rectangle { height: 1px; background: line; }
+
+        // ---------- list ----------
+        ScrollView {
+            vertical-stretch: 1;
+            VerticalLayout {
+                padding: 12px;
+                spacing: 10px;
+                alignment: start;
+
+                for row[i] in downloads: Rectangle {
+                    background: surface;
+                    border-radius: 12px;
+                    border-width: 1px;
+                    border-color: line;
+                    height: 94px;
+
+                    VerticalLayout {
+                        padding: 12px;
+                        spacing: 7px;
+
+                        HorizontalLayout {
+                            spacing: 8px;
+                            Text {
+                                text: row.filename;
+                                color: fg;
+                                font-size: 14px;
+                                font-weight: 600;
+                                overflow: elide;
+                                horizontal-stretch: 1;
+                            }
+                            Text {
+                                text: row.state;
+                                font-size: 12px;
+                                font-weight: 600;
+                                color: row.state == "downloading" ? accent
+                                     : row.state == "completed" ? #2f9e5b
+                                     : row.state == "failed" ? #e06c75
+                                     : muted;
+                            }
+                        }
+
+                        // progress track + fill
+                        Rectangle {
+                            height: 6px;
+                            border-radius: 3px;
+                            background: #0c1115;
+                            Rectangle {
+                                x: 0;
+                                y: 0;
+                                height: parent.height;
+                                width: parent.width * (row.pct / 100);
+                                border-radius: 3px;
+                                background: @linear-gradient(90deg, #2bd4c4 0%, #4aa8ff 100%);
+                            }
+                        }
+
+                        HorizontalLayout {
+                            spacing: 8px;
+                            Text {
+                                text: row.speed-text != ""
+                                    ? row.size-text + "   " + row.speed-text
+                                    : row.size-text;
+                                color: muted;
+                                font-size: 12px;
+                                vertical-alignment: center;
+                                horizontal-stretch: 1;
+                            }
+                            ComboBox {
+                                width: 96px;
+                                model: ["Low", "Normal", "High"];
+                                current-value: row.priority;
+                                selected(v) => { root.set-priority(row.id, v); }
+                            }
+                            Button {
+                                text: row.active ? "Pause" : "Resume";
+                                clicked => {
+                                    if (row.active) {
+                                        root.pause(row.id);
+                                    } else {
+                                        root.resume(row.id);
+                                    }
+                                }
+                            }
+                            Button {
+                                text: "✕";
+                                clicked => {
+                                    if (row.state == "completed" || row.state == "failed" || row.state == "canceled") {
+                                        root.remove(row.id);
+                                    } else {
+                                        root.cancel(row.id);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // empty state
+                if downloads.length == 0: Text {
+                    text: connected ? "No downloads yet. Paste a URL above." : "Connecting to the Magpie daemon…";
+                    color: muted;
+                    horizontal-alignment: center;
+                    font-size: 13px;
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,24 @@
+[package]
+name = "magpie-gui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "magpie-gui"
+path = "src/main.rs"
+
+[dependencies]
+magpie-proto = { path = "../magpie-proto" }
+magpie-daemon = { path = "../magpie-daemon" }
+tokio = { workspace = true }
+tokio-tungstenite = "0.24"
+futures-util.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+uuid.workspace = true
+slint = "1.8"
+
+[build-dependencies]
+slint-build = "1.8"

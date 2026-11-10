@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  macOS: idle-resident Magpie daemon via launchd (LaunchAgent).
+  Install:
+    cp packaging/launchd/com.magpie.daemon.plist ~/Library/LaunchAgents/
+    # edit the ProgramArguments path to your magpie binary, then:
+    launchctl load ~/Library/LaunchAgents/com.magpie.daemon.plist
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.magpie.daemon</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/magpie</string>
+    <string>run</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+  </dict>
+  <key>ProcessType</key>
+  <string>Background</string>
+</dict>
+</plist>

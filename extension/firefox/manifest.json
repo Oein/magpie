@@ -1,0 +1,40 @@
+{
+  "manifest_version": 2,
+  "name": "Magpie",
+  "version": "0.1.0",
+  "description": "Forward browser downloads (with cookies and request headers) to the Magpie download manager.",
+  "icons": {
+    "48": "icons/magpie.svg",
+    "96": "icons/magpie.svg"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "magpie@better-fdm",
+      "strict_min_version": "109.0"
+    }
+  },
+  "permissions": [
+    "downloads",
+    "cookies",
+    "webRequest",
+    "storage",
+    "nativeMessaging",
+    "notifications",
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "browser_action": {
+    "default_title": "Magpie",
+    "default_icon": {
+      "48": "icons/magpie.svg"
+    },
+    "default_popup": "popup.html"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  }
+}

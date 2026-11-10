@@ -1,0 +1,23 @@
+[package]
+name = "magpie-daemon"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "magpie"
+path = "src/main.rs"
+
+[dependencies]
+magpie-core = { path = "../magpie-core" }
+magpie-proto = { path = "../magpie-proto" }
+magpie-script = { path = "../magpie-script" }
+tokio.workspace = true
+tokio-tungstenite = "0.24"
+futures-util.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+uuid.workspace = true

@@ -1,0 +1,14 @@
+[package]
+name = "magpie-script"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+magpie-core = { path = "../magpie-core" }
+magpie-proto = { path = "../magpie-proto" }
+anyhow.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+rquickjs = { version = "0.9", features = ["futures", "macro"] }

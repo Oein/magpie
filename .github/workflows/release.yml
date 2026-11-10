@@ -1,0 +1,51 @@
+name: Release (macOS DMG)
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  macos-dmg:
+    runs-on: macos-14 # Apple Silicon; cross-builds x86_64 too
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (universal targets)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install librsvg (rsvg-convert, for the app icon)
+        run: brew install librsvg
+
+      - name: Determine version
+        id: ver
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=0.1.0-dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build Magpie.app + DMG
+        run: bash packaging/macos/make-dmg.sh "${{ steps.ver.outputs.version }}"
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Magpie-${{ steps.ver.outputs.version }}-dmg
+          path: dist/*.dmg
+
+      - name: Publish pre-release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: true
+          generate_release_notes: true
+          files: dist/*.dmg

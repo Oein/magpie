@@ -1,0 +1,21 @@
+# Linux: idle-resident Magpie daemon (minimal RAM when no downloads).
+# Install:
+#   mkdir -p ~/.config/systemd/user
+#   cp packaging/systemd/magpie.service ~/.config/systemd/user/
+#   # edit ExecStart path to your magpie binary, then:
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now magpie.service
+[Unit]
+Description=Magpie download manager daemon
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/magpie run
+Restart=on-failure
+RestartSec=3
+# Keep the footprint small.
+Nice=5
+
+[Install]
+WantedBy=default.target
