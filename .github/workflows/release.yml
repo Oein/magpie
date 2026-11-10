@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   macos-dmg:
-    runs-on: macos-14 # Apple Silicon; cross-builds x86_64 too
+    runs-on: macos-13 # Intel runner (widely available); cross-builds arm64 too
     steps:
       - uses: actions/checkout@v4
 
